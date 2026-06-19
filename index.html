@@ -6,7 +6,7 @@
   <title>StudyMate - 一緒に学ぼう</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body class="has-bnav">
 
   <!-- ヘッダー -->
   <header class="header">
@@ -15,8 +15,8 @@
       <nav class="nav">
         <a href="#features">機能</a>
         <a href="#community">コミュニティ</a>
-        <a href="#" class="btn-login">ログイン</a>
-        <a href="#" class="btn-signup">無料で始める</a>
+        <a href="login.html" class="btn-login">ログイン</a>
+        <a href="register.html" class="btn-signup">無料で始める</a>
       </nav>
     </div>
   </header>
@@ -29,7 +29,7 @@
         <h1>同じ目標を持つ仲間と<br>一緒に成長しよう</h1>
         <p>学習記録を積み重ねて、似た目標を持つ人たちとつながる。<br>モチベーションを高め合いながら、夢に向かって進もう。</p>
         <div class="hero-buttons">
-          <a href="#" class="btn-primary">今すぐ始める（無料）</a>
+          <a href="register.html" class="btn-primary">今すぐ始める（無料）</a>
           <a href="#features" class="btn-secondary">詳しく見る</a>
         </div>
       </div>
@@ -61,6 +61,7 @@
           </div>
           <div class="card-total">本日合計：<strong>165分</strong> 🔥</div>
         </div>
+        <!-- タイムライン風プレビュー -->
         <div class="timeline-preview">
           <div class="tl-item">
             <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=user2" class="tl-avatar" />
@@ -83,16 +84,53 @@
     </div>
   </section>
 
+  <!-- スローガン -->
+  <section class="slogan-bar">
+    <p class="slogan-text">大きな目標を小さな行動に変換し、<br class="slogan-br">学習者が今やるべきことを迷わず実行できるように。</p>
+  </section>
+
   <!-- 機能紹介 -->
   <section class="features" id="features">
     <div class="section-inner">
       <h2>StudyMate でできること</h2>
-      <p class="section-sub">学習を楽しく、仲間と共に続けるための機能</p>
+      <p class="section-sub">目標を立てて・仲間と出会い・記録して・続ける。この流れが全部できる。</p>
       <div class="features-grid">
-        <div class="feature-card"><div class="feature-icon">🎯</div><h3>目標設定</h3><p>週・月単位の目標を設定し、達成度をリアルタイムで確認。</p></div>
-        <div class="feature-card"><div class="feature-icon">⏱️</div><h3>学習記録</h3><p>科目ごとに勉強時間を記録。グラフで進捗を可視化できます。</p></div>
-        <div class="feature-card"><div class="feature-icon">👥</div><h3>コミュニティ</h3><p>同じ目標を持つ人と自動マッチング。励まし合いながら学べる。</p></div>
-        <div class="feature-card"><div class="feature-icon">📊</div><h3>タイムライン</h3><p>仲間の学習状況を確認。「いいね」やコメントでモチベUP！</p></div>
+        <div class="feature-card">
+          <div class="feature-step">STEP 1</div>
+          <div class="feature-icon">🎯</div>
+          <h3>目標を設定する</h3>
+          <p>志望校・資格・検定など、自分の目標を登録。タスクに分解して「何をすべきか」を明確にしよう。</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-step">STEP 2</div>
+          <div class="feature-icon">👥</div>
+          <h3>仲間を見つける</h3>
+          <p>同じ目標を持つ人とつながろう。一人じゃないと分かるだけでモチベーションが変わる。</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-step">STEP 3</div>
+          <div class="feature-icon">⏱️</div>
+          <h3>学習を記録する</h3>
+          <p>科目・時間を記録するだけでOK。積み上げが見えると、もっとやりたくなる。</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-step">STEP 4</div>
+          <div class="feature-icon">📊</div>
+          <h3>タイムラインで共有</h3>
+          <p>今日の学習を投稿して仲間に届けよう。「いいね」がもらえると次の日も頑張れる。</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-step">STEP 5</div>
+          <div class="feature-icon">🔔</div>
+          <h3>リマインダーで継続</h3>
+          <p>「今日まだ勉強してない」を防ぐ通知機能。忘れずに続けるための仕組みを作ろう。</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-step">STEP 6</div>
+          <div class="feature-icon">📅</div>
+          <h3>習慣を積み上げる</h3>
+          <p>継続日数・週間記録が可視化される。「続けた自分」が目に見えることが最大のご褒美。</p>
+        </div>
       </div>
     </div>
   </section>
@@ -106,28 +144,44 @@
         <div class="feed-card">
           <div class="feed-header">
             <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=u1" class="feed-avatar" />
-            <div><div class="feed-name">りょうすけ <span class="goal-tag">東大志望</span></div><div class="feed-time">3分前</div></div>
+            <div>
+              <div class="feed-name">りょうすけ <span class="goal-tag">東大志望</span></div>
+              <div class="feed-time">3分前</div>
+            </div>
           </div>
           <p class="feed-body">今日は物理を3時間。電磁気学の問題がやっと解けた！明日も頑張ります💪</p>
-          <div class="feed-subjects"><span class="subject-chip">物理 180分</span></div>
+          <div class="feed-subjects">
+            <span class="subject-chip">物理 180分</span>
+          </div>
           <div class="feed-actions"><span>❤️ 18</span><span>💬 3</span></div>
         </div>
         <div class="feed-card">
           <div class="feed-header">
             <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=u4" class="feed-avatar" />
-            <div><div class="feed-name">ゆい <span class="goal-tag">英検1級</span></div><div class="feed-time">15分前</div></div>
+            <div>
+              <div class="feed-name">ゆい <span class="goal-tag">英検1級</span></div>
+              <div class="feed-time">15分前</div>
+            </div>
           </div>
           <p class="feed-body">単語帳1000個クリア🎉 リスニングも毎日続けて少し聞き取れるようになってきた！</p>
-          <div class="feed-subjects"><span class="subject-chip">英語 90分</span></div>
+          <div class="feed-subjects">
+            <span class="subject-chip">英語 90分</span>
+          </div>
           <div class="feed-actions"><span>❤️ 42</span><span>💬 7</span></div>
         </div>
         <div class="feed-card">
           <div class="feed-header">
             <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=u5" class="feed-avatar" />
-            <div><div class="feed-name">たくみ <span class="goal-tag">医学部志望</span></div><div class="feed-time">30分前</div></div>
+            <div>
+              <div class="feed-name">たくみ <span class="goal-tag">医学部志望</span></div>
+              <div class="feed-time">30分前</div>
+            </div>
           </div>
           <p class="feed-body">化学・生物を中心に5時間。過去問を解きまくっています。一緒に頑張れる人募集中！</p>
-          <div class="feed-subjects"><span class="subject-chip">化学 150分</span><span class="subject-chip">生物 150分</span></div>
+          <div class="feed-subjects">
+            <span class="subject-chip">化学 150分</span>
+            <span class="subject-chip">生物 150分</span>
+          </div>
           <div class="feed-actions"><span>❤️ 29</span><span>💬 11</span></div>
         </div>
       </div>
@@ -139,7 +193,7 @@
     <div class="cta-inner">
       <h2>さあ、今日から始めよう</h2>
       <p>仲間と一緒なら、学習は続く。</p>
-      <a href="#" class="btn-primary large">無料で登録する</a>
+      <a href="register.html" class="btn-primary large">無料で登録する</a>
     </div>
   </section>
 
@@ -149,6 +203,13 @@
       <p>© 2026 StudyMate. All rights reserved.</p>
     </div>
   </footer>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <a href="index.html" class="bnav-item active"><span>🏠</span><span>ホーム</span></a>
+    <a href="mypage.html" class="bnav-item"><span>👤</span><span>マイページ</span></a>
+    <a href="timeline.html" class="bnav-item"><span>📱</span><span>タイムライン</span></a>
+  </nav>
 
 </body>
 </html>
