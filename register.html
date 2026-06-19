@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudyMate - 新規登録</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="auth-page">
+
+  <div class="auth-card">
+    <div class="auth-logo">📚 StudyMate</div>
+    <div class="auth-title">アカウントを作成</div>
+    <div class="auth-sub">無料で始めよう。目標に向かって一歩踏み出そう。</div>
+
+    <div class="auth-error" id="errorMsg"></div>
+
+    <form class="auth-form" id="registerForm">
+      <div class="auth-field">
+        <label>ニックネーム</label>
+        <input type="text" id="name" placeholder="例：まほ" required maxlength="20" />
+      </div>
+      <div class="auth-field">
+        <label>メールアドレス</label>
+        <input type="email" id="email" placeholder="example@email.com" required autocomplete="email" />
+      </div>
+      <div class="auth-field">
+        <label>パスワード</label>
+        <input type="password" id="password" placeholder="6文字以上" required minlength="6" autocomplete="new-password" />
+      </div>
+      <div class="auth-field">
+        <label>パスワード（確認）</label>
+        <input type="password" id="passwordConfirm" placeholder="もう一度入力" required autocomplete="new-password" />
+      </div>
+      <button type="submit" class="auth-submit">無料で登録する</button>
+    </form>
+
+    <div class="auth-footer">
+      すでにアカウントをお持ちの方は
+      <a href="login.html">ログイン</a>
+    </div>
+    <div class="auth-footer" style="margin-top:8px">
+      <a href="index.html" style="color:var(--gray-500);font-weight:400">← トップページへ戻る</a>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    if (StudyMate.getMe()) window.location.href = 'mypage.html';
+
+    document.getElementById('registerForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const name            = document.getElementById('name').value.trim();
+      const email           = document.getElementById('email').value.trim();
+      const password        = document.getElementById('password').value;
+      const passwordConfirm = document.getElementById('passwordConfirm').value;
+
+      if (!name) { showError('ニックネームを入力してください。'); return; }
+      if (password !== passwordConfirm) { showError('パスワードが一致していません。'); return; }
+      if (password.length < 6) { showError('パスワードは6文字以上にしてください。'); return; }
+
+      const result = StudyMate.register({ name, email, password });
+      if (result.ok) {
+        window.location.href = 'mypage.html';
+      } else {
+        showError(result.error);
+      }
+    });
+
+    function showError(msg) {
+      const err = document.getElementById('errorMsg');
+      err.textContent = msg;
+      err.classList.add('show');
+    }
+  </script>
+</body>
+</html>

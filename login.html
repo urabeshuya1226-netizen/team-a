@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudyMate - ログイン</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="auth-page">
+
+  <div class="auth-card">
+    <div class="auth-logo">📚 StudyMate</div>
+    <div class="auth-title">おかえりなさい！</div>
+    <div class="auth-sub">ログインして学習を続けよう</div>
+
+    <div class="auth-error" id="errorMsg"></div>
+
+    <form class="auth-form" id="loginForm">
+      <div class="auth-field">
+        <label>メールアドレス</label>
+        <input type="email" id="email" placeholder="example@email.com" required autocomplete="email" />
+      </div>
+      <div class="auth-field">
+        <label>パスワード</label>
+        <input type="password" id="password" placeholder="パスワードを入力" required autocomplete="current-password" />
+      </div>
+      <button type="submit" class="auth-submit">ログイン</button>
+    </form>
+
+    <div class="auth-footer">
+      アカウントをお持ちでない方は
+      <a href="register.html">新規登録</a>
+    </div>
+    <div class="auth-footer" style="margin-top:8px">
+      <a href="index.html" style="color:var(--gray-500);font-weight:400">← トップページへ戻る</a>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    if (StudyMate.getMe()) window.location.href = 'mypage.html';
+
+    document.getElementById('loginForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const email    = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const result   = StudyMate.login({ email, password });
+
+      if (result.ok) {
+        window.location.href = 'mypage.html';
+      } else {
+        const err = document.getElementById('errorMsg');
+        err.textContent = result.error;
+        err.classList.add('show');
+      }
+    });
+  </script>
+</body>
+</html>
