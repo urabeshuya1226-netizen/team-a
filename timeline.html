@@ -1,1 +1,275 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudyMate - タイムライン</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- 認証チェック：DOMレンダリング前に実行してフラッシュを防ぐ -->
+  <script src="app.js"></script>
+  <script>if (!StudyMate.getMe()) location.replace('login.html');</script>
+</head>
+<body class="has-bnav">
 
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">📚 StudyMate</div>
+      <nav class="nav">
+        <a href="index.html">ホーム</a>
+        <a href="mypage.html">マイページ</a>
+        <button onclick="doLogout()" class="btn-login" style="background:none;border:none;cursor:pointer;font-size:14px;font-weight:600;color:#64748b">ログアウト</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page-main">
+    <div class="page-title">📱 タイムライン</div>
+
+    <!-- ===== Timer ===== -->
+    <div class="timer-card" id="timerCard">
+      <div class="timer-label">⏱ 学習タイマー</div>
+      <div class="timer-display" id="timerDisplay">
+        <div class="timer-unit">
+          <span class="timer-digits" id="timerH">00</span>
+          <span class="timer-unit-label">時間</span>
+        </div>
+        <span class="timer-sep">:</span>
+        <div class="timer-unit">
+          <span class="timer-digits" id="timerM">00</span>
+          <span class="timer-unit-label">分</span>
+        </div>
+        <span class="timer-sep">:</span>
+        <div class="timer-unit">
+          <span class="timer-digits" id="timerS">00</span>
+          <span class="timer-unit-label">秒</span>
+        </div>
+      </div>
+      <div class="timer-btns">
+        <button class="timer-btn timer-btn-start" id="timerStartBtn" onclick="startTimer()">▶ 開始</button>
+        <button class="timer-btn timer-btn-pause" id="timerPauseBtn" onclick="pauseTimer()" style="display:none">⏸ 一時停止</button>
+        <button class="timer-btn timer-btn-reset" onclick="resetTimer()">↺ リセット</button>
+      </div>
+      <button class="timer-use-btn" id="timerUseBtn" onclick="useTimerTime()">
+        📝 この時間を投稿に使う
+      </button>
+    </div>
+
+    <!-- Composer -->
+    <div class="timeline-composer">
+      <div class="composer-top">
+        <img src="https://api.dicebear.com/7.x/adventurer/svg?seed=maho" class="composer-avatar" alt="avatar" />
+        <textarea class="post-textarea" id="postText"
+          placeholder="今日の学習を投稿しよう！📖"></textarea>
+      </div>
+      <div class="composer-bottom">
+        <select class="post-select" id="postSubject">
+          <option value="">科目を選択</option>
+          <option>数学</option>
+          <option>英語</option>
+          <option>国語</option>
+          <option>理科</option>
+          <option>社会</option>
+          <option>物理</option>
+          <option>化学</option>
+          <option>生物</option>
+          <option>日本史</option>
+          <option>世界史</option>
+          <option>その他</option>
+        </select>
+        <input type="number" class="post-duration" id="postDuration"
+          placeholder="⏱ 分" min="1" max="999" />
+        <button class="post-btn" id="postBtn">投稿する</button>
+      </div>
+    </div>
+
+    <!-- Feed -->
+    <div class="feed-wrapper" id="feedWrapper">
+      <!-- rendered by JS -->
+    </div>
+  </main>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <a href="index.html" class="bnav-item"><span>🏠</span><span>ホーム</span></a>
+    <a href="mypage.html" class="bnav-item"><span>👤</span><span>マイページ</span></a>
+    <a href="timeline.html" class="bnav-item active"><span>📱</span><span>タイムライン</span></a>
+  </nav>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      if (!StudyMate.requireAuth()) return;
+      const me = StudyMate.getMe();
+      if (me) {
+        document.querySelector('.composer-avatar').src =
+          `https://api.dicebear.com/7.x/adventurer/svg?seed=${me.avatarSeed}`;
+      }
+      StudyMate.initPosts();
+      renderFeed();
+      bindComposer();
+    });
+
+    function doLogout() {
+      StudyMate.logout();
+      window.location.href = 'login.html';
+    }
+
+    /* ============================================================
+       TIMER
+       ============================================================ */
+    let timerInterval = null;
+    let timerSeconds  = 0;
+    let timerRunning  = false;
+
+    function startTimer() {
+      timerRunning = true;
+      document.getElementById('timerCard').classList.add('timer-running');
+      document.getElementById('timerStartBtn').style.display = 'none';
+      document.getElementById('timerPauseBtn').style.display = 'inline-block';
+      document.getElementById('timerUseBtn').classList.remove('show');
+      timerInterval = setInterval(() => {
+        timerSeconds++;
+        updateTimerDisplay();
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      clearInterval(timerInterval);
+      timerRunning = false;
+      document.getElementById('timerCard').classList.remove('timer-running');
+      document.getElementById('timerStartBtn').textContent = '▶ 再開';
+      document.getElementById('timerStartBtn').style.display = 'inline-block';
+      document.getElementById('timerPauseBtn').style.display = 'none';
+      if (timerSeconds > 0) {
+        const mins = Math.ceil(timerSeconds / 60);
+        const btn = document.getElementById('timerUseBtn');
+        btn.textContent = `📝 この時間を投稿に使う（${mins}分）`;
+        btn.classList.add('show');
+      }
+    }
+
+    function resetTimer() {
+      clearInterval(timerInterval);
+      timerRunning  = false;
+      timerSeconds  = 0;
+      document.getElementById('timerCard').classList.remove('timer-running');
+      document.getElementById('timerStartBtn').textContent = '▶ 開始';
+      document.getElementById('timerStartBtn').style.display = 'inline-block';
+      document.getElementById('timerPauseBtn').style.display = 'none';
+      document.getElementById('timerUseBtn').classList.remove('show');
+      updateTimerDisplay();
+    }
+
+    function useTimerTime() {
+      const mins = Math.ceil(timerSeconds / 60);
+      document.getElementById('postDuration').value = mins;
+      document.querySelector('.timeline-composer').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      document.getElementById('postText').focus();
+      const btn = document.getElementById('timerUseBtn');
+      btn.textContent = '✅ 入力しました！';
+      setTimeout(() => {
+        btn.textContent = `📝 この時間を投稿に使う（${Math.ceil(timerSeconds / 60)}分）`;
+      }, 1500);
+    }
+
+    function updateTimerDisplay() {
+      const h = Math.floor(timerSeconds / 3600);
+      const m = Math.floor((timerSeconds % 3600) / 60);
+      const s = timerSeconds % 60;
+      document.getElementById('timerH').textContent = String(h).padStart(2, '0');
+      document.getElementById('timerM').textContent = String(m).padStart(2, '0');
+      document.getElementById('timerS').textContent = String(s).padStart(2, '0');
+    }
+
+    /* ============================================================
+       RENDER
+       ============================================================ */
+    function renderFeed() {
+      const posts  = StudyMate.getPosts() || [];
+      const wrap   = document.getElementById('feedWrapper');
+      if (!posts.length) {
+        wrap.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><p>まだ投稿がありません</p></div>`;
+        return;
+      }
+      wrap.innerHTML = posts.map(postCardHTML).join('');
+    }
+
+    function postCardHTML(p) {
+      const avatarURL = `https://api.dicebear.com/7.x/adventurer/svg?seed=${p.avatar}`;
+      const chips = p.subjects.map(s =>
+        `<span class="tl-chip">📚 ${esc(s.name)}${s.min ? ' '+s.min+'分' : ''}</span>`
+      ).join('');
+      const goalBadge = p.goal
+        ? `<span class="goal-tag" style="background:#dbeafe;color:#1d4ed8;font-size:11px;padding:2px 8px;border-radius:50px;font-weight:600">${esc(p.goal)}</span>`
+        : '';
+      return `
+        <div class="tl-post" id="post-${p.id}">
+          <div class="tl-post-header">
+            <img src="${avatarURL}" class="tl-post-avatar" alt="avatar" />
+            <div class="tl-post-meta">
+              <div class="tl-post-name">${esc(p.user)} ${goalBadge}</div>
+              <div class="tl-post-time">${timeAgo(p.createdAt)}</div>
+            </div>
+          </div>
+          <div class="tl-post-body">${esc(p.body)}</div>
+          ${chips ? `<div class="tl-chips">${chips}</div>` : ''}
+          <div class="tl-actions">
+            <button class="like-btn ${p.likedByMe?'liked':''}"
+              onclick="onLike('${p.id}',this)">
+              ${p.likedByMe?'❤️':'🤍'} ${p.likes}
+            </button>
+          </div>
+        </div>`;
+    }
+
+    /* ============================================================
+       COMPOSER
+       ============================================================ */
+    function bindComposer() {
+      document.getElementById('postBtn').onclick = () => {
+        const body    = document.getElementById('postText').value.trim();
+        const subject = document.getElementById('postSubject').value;
+        const min     = parseInt(document.getElementById('postDuration').value) || 0;
+        if (!body) {
+          document.getElementById('postText').focus();
+          document.getElementById('postText').style.borderColor = '#ef4444';
+          setTimeout(() => document.getElementById('postText').style.borderColor = '', 1500);
+          return;
+        }
+        const subjects = subject ? [{ name: subject, min }] : [];
+        StudyMate.addPost({ body, subjects });
+        document.getElementById('postText').value = '';
+        document.getElementById('postSubject').value = '';
+        document.getElementById('postDuration').value = '';
+        renderFeed();
+        window.scrollTo({ top: 300, behavior: 'smooth' });
+      };
+    }
+
+    /* ============================================================
+       LIKE
+       ============================================================ */
+    function onLike(id, btn) {
+      const result = StudyMate.toggleLike(id);
+      btn.className = 'like-btn ' + (result.likedByMe ? 'liked' : '');
+      btn.textContent = (result.likedByMe ? '❤️' : '🤍') + ' ' + result.likes;
+    }
+
+    /* ============================================================
+       UTILS
+       ============================================================ */
+    function esc(str) {
+      return String(str || '')
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function timeAgo(iso) {
+      const diff = Math.floor((Date.now() - new Date(iso)) / 1000);
+      if (diff < 60)    return `${diff}秒前`;
+      if (diff < 3600)  return `${Math.floor(diff/60)}分前`;
+      if (diff < 86400) return `${Math.floor(diff/3600)}時間前`;
+      return `${Math.floor(diff/86400)}日前`;
+    }
+  </script>
+</body>
+</html>
