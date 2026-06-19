@@ -1,1 +1,341 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudyMate - マイページ</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- 認証チェック：DOMレンダリング前に実行してフラッシュを防ぐ -->
+  <script src="app.js"></script>
+  <script>if (!StudyMate.getMe()) location.replace('login.html');</script>
+</head>
+<body class="has-bnav">
 
+  <!-- Header -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">📚 StudyMate</div>
+      <nav class="nav">
+        <a href="index.html">ホーム</a>
+        <a href="timeline.html">タイムライン</a>
+        <button onclick="doLogout()" class="btn-login" style="background:none;border:none;cursor:pointer;font-size:14px;font-weight:600;color:#64748b">ログアウト</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="page-main">
+
+    <!-- Profile -->
+    <section>
+      <div class="profile-card">
+        <img id="profileAvatar" src="https://api.dicebear.com/7.x/adventurer/svg?seed=maho" class="profile-avatar-lg" alt="avatar" />
+        <div class="profile-details">
+          <div class="profile-name" id="profileName">まほ</div>
+          <div class="profile-bio">目標に向かって毎日コツコツ！</div>
+        </div>
+        <div class="profile-stats-row">
+          <div class="pstat">
+            <span class="pstat-num" id="statGoals">0</span>
+            <span class="pstat-label">目標</span>
+          </div>
+          <div class="pstat">
+            <span class="pstat-num" id="statTasks">0</span>
+            <span class="pstat-label">タスク</span>
+          </div>
+          <div class="pstat">
+            <span class="pstat-num" id="statDone">0</span>
+            <span class="pstat-label">完了済み</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Goals -->
+    <section>
+      <div class="goals-header">
+        <h2 style="font-size:18px;font-weight:800;margin:0">🎯 目標一覧</h2>
+        <button class="btn-add" id="btnAddGoal">＋ 目標を追加</button>
+      </div>
+
+      <div class="goals-grid" id="goalsGrid"></div>
+
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">🎯</div>
+        <p>まだ目標がありません</p>
+        <p>「目標を追加」ボタンから設定しましょう！</p>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== Add Goal Modal ===== -->
+  <div class="modal-overlay hidden" id="goalModal">
+    <div class="modal">
+      <div class="modal-title">🎯 目標を追加</div>
+
+      <div class="form-group">
+        <label>目標名</label>
+        <input type="text" id="inputGoalName" placeholder="例：英検2級、共通テスト、東京大学" />
+      </div>
+
+      <div class="form-group">
+        <label>種類を選択</label>
+        <div class="chip-group" id="typeChips">
+          <button class="chip active" data-val="📝 資格・検定">📝 資格・検定</button>
+          <button class="chip" data-val="🏫 志望校">🏫 志望校</button>
+          <button class="chip" data-val="✨ その他の目標">✨ その他</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>テーマカラー</label>
+        <div class="color-row" id="colorPicker">
+          <button class="color-dot active" data-c="#3b82f6" style="background:#3b82f6"></button>
+          <button class="color-dot" data-c="#22c55e" style="background:#22c55e"></button>
+          <button class="color-dot" data-c="#f59e0b" style="background:#f59e0b"></button>
+          <button class="color-dot" data-c="#ef4444" style="background:#ef4444"></button>
+          <button class="color-dot" data-c="#8b5cf6" style="background:#8b5cf6"></button>
+          <button class="color-dot" data-c="#ec4899" style="background:#ec4899"></button>
+        </div>
+      </div>
+
+      <div class="modal-btns">
+        <button class="btn-ghost" id="cancelGoal">キャンセル</button>
+        <button class="btn-primary" id="saveGoal">追加する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Add Task Modal ===== -->
+  <div class="modal-overlay hidden" id="taskModal">
+    <div class="modal">
+      <div class="modal-title">✏️ タスクを追加</div>
+      <div class="form-group">
+        <label>タスク名</label>
+        <input type="text" id="inputTaskName" placeholder="例：単語帳1周、過去問3年分" />
+      </div>
+      <div class="modal-btns">
+        <button class="btn-ghost" id="cancelTask">キャンセル</button>
+        <button class="btn-primary" id="saveTask">追加する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <nav class="bottom-nav">
+    <a href="index.html" class="bnav-item"><span>🏠</span><span>ホーム</span></a>
+    <a href="mypage.html" class="bnav-item active"><span>👤</span><span>マイページ</span></a>
+    <a href="timeline.html" class="bnav-item"><span>📱</span><span>タイムライン</span></a>
+  </nav>
+
+  <script>
+    /* ============================================================
+       MyPage JavaScript
+       ============================================================ */
+
+    // --- State ---
+    let selectedType  = '📝 資格・検定';
+    let selectedColor = '#3b82f6';
+    let currentGoalId = null;
+
+    // --- Init ---
+    document.addEventListener('DOMContentLoaded', () => {
+      // 認証チェック
+      if (!StudyMate.requireAuth()) return;
+      // ログイン中ユーザー情報を反映
+      const me = StudyMate.getMe();
+      if (me) {
+        document.getElementById('profileName').textContent = me.name;
+        document.getElementById('profileAvatar').src =
+          `https://api.dicebear.com/7.x/adventurer/svg?seed=${me.avatarSeed}`;
+      }
+      renderAll();
+      bindModals();
+    });
+
+    function doLogout() {
+      StudyMate.logout();
+      window.location.href = 'login.html';
+    }
+
+    /* ============================================================
+       RENDER
+       ============================================================ */
+    function renderAll() {
+      const goals    = StudyMate.getGoals();
+      const allTasks = goals.flatMap(g => g.tasks);
+
+      // Stats
+      document.getElementById('statGoals').textContent = goals.length;
+      document.getElementById('statTasks').textContent = allTasks.length;
+      document.getElementById('statDone').textContent  = allTasks.filter(t => t.status === 'completed').length;
+
+      // Empty state
+      const grid  = document.getElementById('goalsGrid');
+      const empty = document.getElementById('emptyState');
+
+      if (!goals.length) {
+        grid.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      grid.innerHTML = goals.map(goalCardHTML).join('');
+    }
+
+    function goalCardHTML(goal) {
+      const progress = StudyMate.getProgress(goal);
+      const done     = goal.tasks.filter(t => t.status === 'completed').length;
+
+      const STATUS_COLOR = { not_started: '#94a3b8', in_progress: '#3b82f6', completed: '#22c55e' };
+
+      const tasksHTML = goal.tasks.length
+        ? goal.tasks.map(t => `
+          <div class="task-item">
+            <span class="task-name" title="${esc(t.name)}">${esc(t.name)}</span>
+            <select class="status-select"
+              style="border-color:${STATUS_COLOR[t.status]};color:${STATUS_COLOR[t.status]}"
+              onchange="onStatusChange('${goal.id}','${t.id}',this)">
+              <option value="not_started" ${t.status==='not_started'?'selected':''}>未着手</option>
+              <option value="in_progress" ${t.status==='in_progress'?'selected':''}>進行中</option>
+              <option value="completed"   ${t.status==='completed'  ?'selected':''}>完了</option>
+            </select>
+            <button class="task-del" onclick="onDeleteTask('${goal.id}','${t.id}')" title="削除">✕</button>
+          </div>`).join('')
+        : `<p class="no-tasks">タスクを追加して進捗を管理しましょう</p>`;
+
+      return `
+        <div class="goal-card" id="goal-${goal.id}">
+          <div class="goal-bar" style="background:${goal.color}"></div>
+          <div class="goal-body">
+            <div class="goal-top">
+              <span class="goal-type-badge"
+                style="background:${goal.color}20;color:${goal.color}">${goal.type}</span>
+              <button class="goal-del-btn" onclick="onDeleteGoal('${goal.id}')" title="目標を削除">🗑️</button>
+            </div>
+            <div class="goal-name">${esc(goal.name)}</div>
+
+            <div class="progress-section">
+              <div class="progress-label">
+                <span>進捗</span>
+                <span class="progress-pct" style="color:${goal.color}">${progress}%</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" style="width:${progress}%;background:${goal.color}"></div>
+              </div>
+              <div class="progress-counts">${done} / ${goal.tasks.length} タスク完了</div>
+            </div>
+
+            <div class="tasks-list">${tasksHTML}</div>
+            <button class="btn-add-task" onclick="openTaskModal('${goal.id}')">＋ タスクを追加</button>
+          </div>
+        </div>`;
+    }
+
+    function esc(str) {
+      return String(str)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    /* ============================================================
+       ACTIONS
+       ============================================================ */
+    function onStatusChange(goalId, taskId, select) {
+      StudyMate.setTaskStatus(goalId, taskId, select.value);
+      renderAll();
+    }
+
+    function onDeleteTask(goalId, taskId) {
+      StudyMate.deleteTask(goalId, taskId);
+      renderAll();
+    }
+
+    function onDeleteGoal(id) {
+      if (!confirm('この目標を削除しますか？\n（タスクもすべて削除されます）')) return;
+      StudyMate.deleteGoal(id);
+      renderAll();
+    }
+
+    /* ============================================================
+       MODALS
+       ============================================================ */
+    function bindModals() {
+
+      /* --- Goal modal --- */
+      document.getElementById('btnAddGoal').onclick = () => {
+        document.getElementById('inputGoalName').value = '';
+        document.getElementById('goalModal').classList.remove('hidden');
+        setTimeout(() => document.getElementById('inputGoalName').focus(), 50);
+      };
+      const closeGoal = () => document.getElementById('goalModal').classList.add('hidden');
+      document.getElementById('cancelGoal').onclick = closeGoal;
+      document.getElementById('goalModal').onclick = e => {
+        if (e.target.id === 'goalModal') closeGoal();
+      };
+      document.getElementById('saveGoal').onclick = () => {
+        const name = document.getElementById('inputGoalName').value.trim();
+        if (!name) { shakeInput('inputGoalName'); return; }
+        StudyMate.addGoal({ name, type: selectedType, color: selectedColor });
+        closeGoal();
+        renderAll();
+      };
+      document.getElementById('inputGoalName').addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.getElementById('saveGoal').click();
+      });
+
+      /* --- Type chips --- */
+      document.querySelectorAll('#typeChips .chip').forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll('#typeChips .chip').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          selectedType = btn.dataset.val;
+        };
+      });
+
+      /* --- Color picker --- */
+      document.querySelectorAll('#colorPicker .color-dot').forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll('#colorPicker .color-dot').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          selectedColor = btn.dataset.c;
+        };
+      });
+
+      /* --- Task modal --- */
+      const closeTask = () => document.getElementById('taskModal').classList.add('hidden');
+      document.getElementById('cancelTask').onclick = closeTask;
+      document.getElementById('taskModal').onclick = e => {
+        if (e.target.id === 'taskModal') closeTask();
+      };
+      document.getElementById('saveTask').onclick = () => {
+        const name = document.getElementById('inputTaskName').value.trim();
+        if (!name) { shakeInput('inputTaskName'); return; }
+        StudyMate.addTask(currentGoalId, name);
+        closeTask();
+        renderAll();
+      };
+      document.getElementById('inputTaskName').addEventListener('keydown', e => {
+        if (e.key === 'Enter') document.getElementById('saveTask').click();
+      });
+    }
+
+    function openTaskModal(goalId) {
+      currentGoalId = goalId;
+      document.getElementById('inputTaskName').value = '';
+      document.getElementById('taskModal').classList.remove('hidden');
+      setTimeout(() => document.getElementById('inputTaskName').focus(), 50);
+    }
+
+    function shakeInput(id) {
+      const el = document.getElementById(id);
+      el.style.borderColor = '#ef4444';
+      el.style.animation = 'none';
+      setTimeout(() => {
+        el.style.animation = '';
+        el.focus();
+      }, 100);
+    }
+  </script>
+</body>
+</html>
